@@ -38,7 +38,7 @@ This sophisticated bot automates multiple operations on the Pharos Testnet, incl
 
 1. Clone repository:
 ```bash
-git clone https://github.com/your-username/pharos.git
+git clone https://github.com/dicoderin/pharos.git
 cd pharos
 ```
 
