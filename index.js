@@ -406,23 +406,49 @@ class API {
     }
   }
 
+  static async checkJwtValidity(wallet, proxy, jwt) {
+    try {
+      const endpoint = POINTS_CONFIG.api.endpoints.profile;
+      const response = await API.request('get', endpoint, proxy, null, jwt);
+      return response && response.code === 0;
+    } catch (error) {
+      return false;
+    }
+  }
+
   static async verifyTask(wallet, proxy, jwt, txHash, taskType) {
     const taskId = POINTS_CONFIG.tasks[taskType];
-    // TINGKATKAN MENJADI 20X PERCOBAAN
+    let currentJwt = jwt;
+    
     for (let i = 1; i <= 20; i++) {
       try {
+        // Periksa validitas jwt
+        const isValid = await API.checkJwtValidity(wallet, proxy, currentJwt);
+        if (!isValid) {
+          logger.warn('JWT tidak valid, melakukan login ulang...');
+          const newJwt = await API.login(wallet, proxy);
+          if (newJwt) {
+            currentJwt = newJwt;
+          } else {
+            logger.error('Gagal login ulang, skip verifikasi');
+            return false;
+          }
+        }
+        
         logger.step(`Memverifikasi task (${i}/20): ${txHash}`);
         const endpoint = `${POINTS_CONFIG.api.endpoints.verify}?address=${wallet.address}&task_id=${taskId}&tx_hash=${txHash}`;
-        const response = await API.request('post', endpoint, proxy, null, jwt);
+        const response = await API.request('post', endpoint, proxy, null, currentJwt);
         
         if (response?.code === 0 && response.data?.verified) {
           logger.success(`Task terverifikasi: ${txHash}`);
           return true;
+        } else if (response?.msg) {
+          logger.warn(`Verifikasi gagal: ${response.msg}`);
         }
       } catch (error) {
         logger.error(`Verifikasi attempt ${i} gagal: ${error.message}`);
       }
-      await Utils.sleep(5000);
+      await Utils.sleep(10000); // Tunggu 10 detik antar percobaan
     }
     logger.error(`Verifikasi task gagal setelah 20 percobaan`);
     return false;
@@ -670,9 +696,12 @@ class PointsFarming {
         ]
       );
       
+      // Multicall expects an array of byte strings
+      const multicallData = ['0x88316456' + data.slice(2)];
+      
       logger.step(`Menambahkan likuiditas ${pool.tokenA}/${pool.tokenB}...`);
       const tx = await contract.multicall(
-        ['0x88316456' + data.slice(2)],
+        multicallData,
         { gasLimit: 800_000 }
       );
       
@@ -1005,7 +1034,7 @@ class LendingAutomation {
       
       // 6. Tampilkan status lending
       const lendingData = await this.getUserLendingData(wallet);
-      if (lendingData) {
+      if ( lendingData) {
         logger.info(`Lending Status: 
   Collateral: ${lendingData.totalCollateralETH} ETH
   Debt: ${lendingData.totalDebtETH} ETH
