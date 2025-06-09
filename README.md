@@ -1,6 +1,6 @@
 # Pharos Testnet Bot
 
-![Pharos Network](https://via.placeholder.com/800x200?text=Pharos+Testnet+Automation+Bot)
+![Pharos Network](https://cdn.prod.website-files.com/67dcd1631de3a405ce797877/681b3e1c10442d4b915b7896_AD_4nXdTwAajVLXzZ5693lMIi7OXfUISTpHQAmkCxUJcSS_KIYsPesywLhcbJzdA4HSKFjkTHg9KnPGEkou9Cf1BIx5d0oSRLH5pmJ1_yEJTyWmMeC-C88NrLDKQCNP-Zfkq_byUUHApCA.png)
 
 This sophisticated bot automates multiple operations on the Pharos Testnet, including points farming and lending operations. Designed for efficiency and reliability, it features color-coded logging, proxy support, and comprehensive error handling.
 
